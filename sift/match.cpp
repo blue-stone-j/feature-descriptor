@@ -196,10 +196,14 @@ cv::Mat SiftMatch::LMS(const cv::Mat &match1_xy, const cv::Mat &match2_xy, std::
 cv::Mat SiftMatch::improve_LMS(const cv::Mat &match1_xy, const cv::Mat &match2_xy, std::string model, float &rmse)
 {
   if (match1_xy.rows != match2_xy.rows)
+  {
     CV_Error(CV_StsBadArg, "LMS模块输入特征点对个数不一致！");
+  }
 
   if (!(model == std::string("affine") || model == std::string("similarity") || model == std::string("perspective")))
+  {
     CV_Error(CV_StsBadArg, "LMS模块图像变换类型输入错误！");
+  }
 
   const int N = match1_xy.rows; // 特征点个数
 
@@ -420,10 +424,17 @@ cv::Mat SiftMatch::improve_LMS(const cv::Mat &match1_xy, const cv::Mat &match2_x
 cv::Mat SiftMatch::ransac(const std::vector<cv::Point2f> &points_1, const std::vector<cv::Point2f> &points_2, std::string model, float threshold, std::vector<bool> &inliers, float &rmse)
 {
   if (points_1.size() != points_2.size())
+  {
     CV_Error(CV_StsBadArg, "ransac模块输入特征点数量不一致！");
+  }
 
-  if (!(model == std::string("affine") || model == std::string("similarity") || model == std::string("perspective") || model == std::string("projective")))
+  if (!(model == std::string("affine")
+        || model == std::string("similarity")
+        || model == std::string("perspective")
+        || model == std::string("projective")))
+  {
     CV_Error(CV_StsBadArg, "ransac模块图像变换类型输入错误！");
+  }
 
   const size_t N = points_1.size(); // 特征点对数，size_t 类型常用来保存一个数据的大小，通常为整形，可移植性强
 
@@ -448,9 +459,13 @@ cv::Mat SiftMatch::ransac(const std::vector<cv::Point2f> &points_1, const std::v
   }
 
   if (max_iteration > 800)
+  {
     iterations = 800;
+  }
   else
+  {
     iterations = max_iteration;
+  }
 
   // 取出保存在points_1和points_2中的点坐标，保存在Mat矩阵中，方便处理
   cv::Mat arr_1, arr_2; // arr_1,和arr_2是一个[3 x N]的矩阵，每一列表示一个点坐标,第三行全是1
@@ -498,13 +513,19 @@ cv::Mat SiftMatch::ransac(const std::vector<cv::Point2f> &points_1, const std::v
 
       // 保证这n个点坐标不相同
       if (n == 2 && p[0] != p[1] && (p10[p[0]] != p10[p[1]] || p11[p[0]] != p11[p[1]]) && (p20[p[0]] != p20[p[1]] || p21[p[0]] != p21[p[1]]))
+      {
         break;
+      }
 
       if (n == 3 && p[0] != p[1] && p[0] != p[2] && p[1] != p[2] && (p10[p[0]] != p10[p[1]] || p11[p[0]] != p11[p[1]]) && (p10[p[0]] != p10[p[2]] || p11[p[0]] != p11[p[2]]) && (p10[p[1]] != p10[p[2]] || p11[p[1]] != p11[p[2]]) && (p20[p[0]] != p20[p[1]] || p21[p[0]] != p21[p[1]]) && (p20[p[0]] != p20[p[2]] || p21[p[0]] != p21[p[2]]) && (p20[p[1]] != p20[p[2]] || p21[p[1]] != p21[p[2]]))
+      {
         break;
+      }
 
       if (n == 4 && p[0] != p[1] && p[0] != p[2] && p[0] != p[3] && p[1] != p[2] && p[1] != p[3] && p[2] != p[3] && (p10[p[0]] != p10[p[1]] || p11[p[0]] != p11[p[1]]) && (p10[p[0]] != p10[p[2]] || p11[p[0]] != p11[p[2]]) && (p10[p[0]] != p10[p[3]] || p11[p[0]] != p11[p[3]]) && (p10[p[1]] != p10[p[2]] || p11[p[1]] != p11[p[2]]) && (p10[p[1]] != p10[p[3]] || p11[p[1]] != p11[p[3]]) && (p10[p[2]] != p10[p[3]] || p11[p[2]] != p11[p[3]]) && (p20[p[0]] != p20[p[1]] || p21[p[0]] != p21[p[1]]) && (p20[p[0]] != p20[p[2]] || p21[p[0]] != p21[p[2]]) && (p20[p[0]] != p20[p[3]] || p21[p[0]] != p21[p[3]]) && (p20[p[1]] != p20[p[2]] || p21[p[1]] != p21[p[2]]) && (p20[p[1]] != p20[p[3]] || p21[p[1]] != p21[p[3]]) && (p20[p[2]] != p20[p[3]] || p21[p[2]] != p21[p[3]]))
+      {
         break;
+      }
     }
 
     // 提取出n个点对
@@ -597,7 +618,7 @@ cv::Mat SiftMatch::ransac(const std::vector<cv::Point2f> &points_1, const std::v
       for (size_t i = 0; i < N; ++i)
         inliers[i] = right[i];
     }
-  }
+  } // endfor:
 
   // 删除重复点对
   for (size_t i = 0; i < N - 1; ++i)
@@ -1021,13 +1042,21 @@ void SiftMatch::image_fusion(const cv::Mat &image_1, const cv::Mat &image_2, con
   int Y_max = cv::min(cvCeil(max_y), 3 * rows_1 - 1);
 
   if (X_min > cols_1)
+  {
     X_min = cols_1;
+  }
   if (X_max < 2 * cols_1 - 1)
+  {
     X_max = 2 * cols_1 - 1;
+  }
   if (Y_min > rows_1)
+  {
     Y_min = rows_1;
+  }
   if (Y_max < 2 * rows_1 - 1)
+  {
     Y_max = 2 * rows_1 - 1;
+  }
 
   // 提取有价值区域
   cv::Range Y_range(Y_min, Y_max + 1);
@@ -1203,7 +1232,7 @@ cv::Mat SiftMatch::match(const cv::Mat &image_1, const cv::Mat &image_2, const s
       // queryIdx、trainIdx和distance是DMatch类中的一些属性	//pt是KeyPoint类中的成员，对应关键点的坐标
       point_1.push_back(keys_1[dmatchs[i][0].queryIdx].pt); // queryIdx对应的是特征描述子的下标，也是对应特征点的下标
       point_2.push_back(keys_2[dmatchs[i][0].trainIdx].pt); // trainIdx对应的是特征描述子的下标，也是对应特征点的下标
-      init_matchs.push_back(dmatchs[i][0]);                 // 保存正确的dmatchs
+      init_matchs.push_back(dmatchs[i][0]);                 // 保存正确的 dmatchs
     }
   }
 
@@ -1212,13 +1241,15 @@ cv::Mat SiftMatch::match(const cv::Mat &image_1, const cv::Mat &image_2, const s
   int min_pairs = (model == std::string("similarity") ? 2 : (model == std::string("affine") ? 3 : 4));
 
   if (point_1.size() < min_pairs)
+  {
     CV_Error(CV_StsBadArg, "match模块距离比阶段匹配特征点个数不足！");
+  }
 
-  // 使用ransac算法再次对匹配点进行筛选，然后使用最后确定的匹配点计算变换矩阵的参数
+  // 使用 ransac 算法再次对匹配点进行筛选，然后使用最后确定的匹配点计算变换矩阵的参数
   std::vector<bool> inliers; // 存放的是 bool 类型的数据，对应特征点
   float rmse;
 
-  // homography是一个(3,3)矩阵，是待配准影像到参考影像的变换矩阵，初始误差阈值是 1.5
+  // homography 是一个(3,3)矩阵，是待配准影像到参考影像的变换矩阵，初始误差阈值是 1.5
   cv::Mat homography = ransac(point_1, point_2, model, 1.5, inliers, rmse);
 
   // 提取出处正确匹配点对

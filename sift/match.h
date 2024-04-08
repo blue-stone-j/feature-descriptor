@@ -42,10 +42,10 @@ class SiftMatch
   // 该函数删除错误的匹配点对
   cv::Mat ransac(const std::vector<cv::Point2f> &points_1, const std::vector<cv::Point2f> &points_2, std::string model, float threshold, std::vector<bool> &inliers, float &rmse);
 
-  // 绘制棋盘图像
+  // 绘制棋盘图像(interface)
   void mosaic_map(const cv::Mat &image_1, const cv::Mat &image_2, cv::Mat &chessboard_1, cv::Mat &chessboard_2, cv::Mat &mosaic_image, int width);
 
-  // 该函数把两幅配准后的图像进行融合镶嵌
+  // 该函数把两幅配准后的图像进行融合镶嵌(interface)
   void image_fusion(const cv::Mat &image_1, const cv::Mat &image_2, const cv::Mat T, cv::Mat &fusion_image, cv::Mat &matched_image);
 
   // 该函数进行描述子的最近邻和次近邻匹配
@@ -54,7 +54,7 @@ class SiftMatch
   // 建立尺度直方图、ROM 直方图
   void scale_ROM_Histogram(const std::vector<cv::DMatch> &matches, float *scale_hist, float *ROM_hist, int n);
 
-  // 该函数删除错误匹配点对，并进行配准
+  // 该函数删除错误匹配点对，并进行配准(interface)
   cv::Mat match(const cv::Mat &image_1, const cv::Mat &image_2, const std::vector<std::vector<cv::DMatch>> &dmatchs, std::vector<cv::KeyPoint> keys_1,
                 std::vector<cv::KeyPoint> keys_2, std::string model, std::vector<cv::DMatch> &right_matchs, cv::Mat &matched_line, std::vector<cv::DMatch> &init_matchs);
 };

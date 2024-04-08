@@ -1367,7 +1367,7 @@ static void calc_sift_descriptor(const cv::Mat &gauss_image, float main_angle, c
   // 实际上是在 4 x 4 的网格中找 16 个种子点，每个种子点都在子网格的正中心，
   // 通过三线性插值对不同种子点间的像素点进行加权作用到不同的种子点上绘制方向直方图
 
-  // 计算该特征点的特征描述子
+  // 遍历邻域的采样点，以计算该特征点的特征描述子
   for (k = 0; k < len; ++k)
   {
     float rbin = RBin[k], cbin = CBin[k]; // 子区域内像素点坐标，rbin,cbin范围是(-1,d)
@@ -1405,19 +1405,23 @@ static void calc_sift_descriptor(const cv::Mat &gauss_image, float main_angle, c
       o0 = o0 - n;
     }
 
-    // 三线性插值用于计算落在两个子区域之间的像素对两个子区域的作用，并把其分配到对应子区域的8个方向上
-    // 像素对应的信息通过加权分配给其周围的种子点，并把相应方向的梯度值进行累加
+    /* 三线性插值，同时考虑了采样点在子区域内的行、列位置以及梯度方向上的线性插值。
+       这种插值方法使得描述子能够更精细地捕捉关键点周围的梯度分布，从而提高特征描述的区分度和对变化的鲁棒性。*/
 
+    /* 使用三线性插值计算落在两个子区域之间的像素对两个子区域的作用，并把其分配到对应子区域的8个方向上
+       像素对应的信息通过加权分配给其周围的种子点，并把相应方向的梯度值进行累加 */
+
+    // 采样点梯度幅值对当前子区域行的贡献
     float v_r1 = mag * rbin; // 第二行分配的值
     float v_r0 = mag - v_r1; // 第一行分配的值
 
+    // 采样点梯度幅值对四个邻近子区域（即四个角落）的贡献
     float v_rc11 = v_r1 * cbin;   // 第二行第二列分配的值，右下角种子点
     float v_rc10 = v_r1 - v_rc11; // 第二行第一列分配的值，左下角种子点
-
     float v_rc01 = v_r0 * cbin;   // 第一行第二列分配的值，右上角种子点
     float v_rc00 = v_r0 - v_rc01; // 第一行第一列分配的值，左上角种子点
 
-    // 一个像素点的方向为每个种子点的两个方向做出贡献
+    // 像素点的一个方向为每个种子点的两个方向做出贡献
     float v_rco111 = v_rc11 * obin;     // 右下角种子点第二个方向上分配的值
     float v_rco110 = v_rc11 - v_rco111; // 右下角种子点第一个方向上分配的值
 
@@ -1656,8 +1660,8 @@ static void improve_calc_sift_descriptor(const cv::Mat &gauss_image, float main_
   float sin_t = sinf(-main_angle * (float)(CV_PI / 180)); // 计算主方向的正弦
 
   float bin_per_rad_1 = n1 / 360.f; // n=8
-  float bin_per_rad_2 = n2 / 360.f; // 原理特征点部分阈值
-  float bin_per_rad_3 = n3 / 360.f; // 原理特征点部分阈值
+  float bin_per_rad_2 = n2 / 360.f; // 原特征点部分阈值
+  float bin_per_rad_3 = n3 / 360.f; // 原特征点部分阈值
 
   float exp_scale  = -1.f / (d * d * 0.5f);  // 权重指数部分
   float hist_width = DESCR_SCL_FCTR * scale; // 子区域边长，子区域的面积也即采样像素点个数
@@ -1777,9 +1781,9 @@ static void improve_calc_sift_descriptor(const cv::Mat &gauss_image, float main_
 
           ++k3;
         }
-      }
+      } // endif: weight according distance from feature
     }
-  }
+  } // endfor: every neighbor
 
   // 两个区域内数组的合并拼接
   for (int k = 0; k < k2; k++)
@@ -1816,7 +1820,7 @@ static void improve_calc_sift_descriptor(const cv::Mat &gauss_image, float main_
   {
     float rbin = RBin[k], cbin = CBin[k]; // 子区域内像素点坐标，rbin,cbin范围是(-1,d)
 
-    // 离特征点进的邻域
+    // 离特征点近的邻域
     if (k < k1)
     {
       // 子区域内像素点处理后的方向
@@ -2080,8 +2084,8 @@ void Sift::calc_sift_descriptors(const std::vector<std::vector<cv::Mat>> &gauss_
     float main_angle = keypoints[i].angle;                 // 特征点主方向
 
     // 计算该点的描述子
-    calc_sift_descriptor(gauss_pyr[octaves][layer], main_angle, pt, scale, d, n, descriptors.ptr<float>((int)i));
-    // improve_calc_sift_descriptor(gauss_pyr[octaves][layer], main_angle, pt, scale, d, n, descriptors.ptr<float>((int)i));
+    // calc_sift_descriptor(gauss_pyr[octaves][layer], main_angle, pt, scale, d, n, descriptors.ptr<float>((int)i));
+    improve_calc_sift_descriptor(gauss_pyr[octaves][layer], main_angle, pt, scale, d, n, descriptors.ptr<float>((int)i));
     // calc_gloh_descriptor(amplit[octaves], orient[octaves], pt, scale, main_angle, d, n, descriptors.ptr<float>((int)i));
 
     if (double_size) // 如果图像尺寸扩大一倍
