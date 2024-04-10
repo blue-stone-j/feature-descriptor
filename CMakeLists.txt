@@ -18,17 +18,3 @@ list(APPEND TARGET_LIBRARIES ${OpenCV_LIBRARIES})
 
 add_executable(sift sift/main.cpp sift/display.cpp sift/match.cpp sift/sift.cpp)
 target_link_libraries(sift ${TARGET_LIBRARIES} gflags)
-
-# ---------------------------------------------------------------------------------------
-# Install
-# ---------------------------------------------------------------------------------------
-# install(TARGETS canny prewitt
-# ARCHIVE DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
-# LIBRARY DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
-# RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
-# )
-
-# install(DIRECTORY
-# config
-# DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}
-# )

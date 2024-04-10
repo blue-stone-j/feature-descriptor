@@ -120,6 +120,8 @@ int main(int argc, char *argv[])
   std::vector<std::vector<cv::DMatch>> dmatch1;
   std::vector<std::vector<cv::DMatch>> dmatch2;
 
+  // calculate initial matches
+  /* (查询描述符集合,训练描述符集合,存储匹配结果,指定返回每个查询点的K个最佳匹配)*/
   matcher1->knnMatch(descriptors_1, descriptors_2, dmatchs, 2);
 
   std::cout << "距离比之前初始匹配点对个数是：" << dmatchs.size() << std::endl;

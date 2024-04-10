@@ -350,11 +350,11 @@ void Sift::build_dog_pyramid(std::vector<std::vector<cv::Mat>> &dog_pyramid, con
 }
 
 /***********生成高斯差分金字塔当前层对应的梯度幅度图像和梯度方向图像***********/
-/*image为高斯差分金字塔当前层图像
- *amplit为当前层梯度幅度图像
- *orient为当前层梯度方向图像
- *scale当前层尺度
- *nums为相对底层的层数
+/*image 为高斯差分金字塔当前层图像
+ *amplit 为当前层梯度幅度图像
+ *orient 为当前层梯度方向图像
+ *scale 当前层尺度
+ *nums 为相对底层的层数
  */
 void Sift::amplit_orient(const cv::Mat &image, std::vector<cv::Mat> &amplit, std::vector<cv::Mat> &orient, float scale, int nums)
 {
@@ -413,11 +413,11 @@ inline void adjustIDs(int &id, const int &range)
 }
 
 /***********************该函数计算尺度空间特征点的主方向，用于后面特征点的检测***************************/
-/*image表示特征点所在位置的高斯图像，后面可对着源码进行修改
- pt表示特征点的位置坐标(x,y)
- scale特征点的尺度
- n表示直方图bin个数
- hist表示计算得到的直方图
+/*image 表示特征点所在位置的高斯图像，后面可对着源码进行修改
+ pt 表示特征点的位置坐标(x,y)
+ scale 特征点的尺度
+ n 表示直方图bin个数
+ hist 表示计算得到的直方图
  函数返回值是直方图hist中的最大数值*/
 static float clac_orientation_hist(const cv::Mat &image, cv::Point pt, float scale, int n, float *hist)
 {
@@ -1502,15 +1502,16 @@ static void calc_sift_descriptor(const cv::Mat &gauss_image, float main_angle, c
 }
 
 /*************************该函数计算每个特征点的特征描述子*****************************/
-/*amplit表示特征点所在层的梯度幅度图像
-  orient表示特征点所在层的梯度角度图像
-  pt表示特征点的位置
-  scale表示特征点所在层的尺度
-  main_ori表示特征点的主方向，0-360度
-  d表示GLOH角度方向区间个数，默认是8，
-  n表示每个网格内角度在0-360度之间等分个数，n默认是8
+/*amplit 表示特征点所在层的梯度幅度图像
+  orient 表示特征点所在层的梯度角度图像
+  pt 表示特征点的位置
+  scale 表示特征点所在层的尺度
+  main_ori 表示特征点的主方向，0-360度
+  d 表示GLOH角度方向区间个数，默认是8，
+  n 表示每个网格内角度在0-360度之间等分个数，n默认是8
  */
-static void calc_gloh_descriptor(const cv::Mat &amplit, const cv::Mat &orient, cv::Point2f pt, float scale, float main_ori, int d, int n, float *ptr_des)
+static void calc_gloh_descriptor(const cv::Mat &amplit, const cv::Mat &orient, cv::Point2f pt, float scale,
+                                 float main_ori, int d, int n, float *ptr_des)
 {
   cv::Point point(cvRound(pt.x), cvRound(pt.y));
 

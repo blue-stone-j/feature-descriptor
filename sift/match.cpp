@@ -20,19 +20,23 @@ SiftMatch::SiftMatch()
 
 /********该函数根据正确的匹配点对，计算出图像之间的变换关系********/
 /*注意：输入几个点都能计算对应的 x 矩阵，(2N,8)*(8,1)=(2N,1)
- match1_xy表示参考图像特征点坐标集合,[M x 2]矩阵，M表示特征的个数
- match2_xy表示待配准图像特征点集合，[M x 2]矩阵，M表示特征点集合
- model表示变换类型，“相似变换”,"仿射变换","透视变换"
- rmse表示均方根误差
+ match1_xy 表示参考图像特征点坐标集合,[M x 2]矩阵，M表示特征的个数
+ match2_xy 表示待配准图像特征点集合，[M x 2]矩阵，M表示特征点集合
+ model 表示变换类型，“相似变换”,"仿射变换","透视变换"
+ rmse 表示均方根误差
  返回值为计算得到的3 x 3矩阵参数
  */
 cv::Mat SiftMatch::LMS(const cv::Mat &match1_xy, const cv::Mat &match2_xy, std::string model, float &rmse)
 {
   if (match1_xy.rows != match2_xy.rows)
+  {
     CV_Error(CV_StsBadArg, "LMS模块输入特征点对个数不一致！");
+  }
 
   if (!(model == std::string("affine") || model == std::string("similarity") || model == std::string("perspective") || model == std::string("projective")))
+  {
     CV_Error(CV_StsBadArg, "LMS模块图像变换类型输入错误！");
+  }
 
   const int N = match1_xy.rows; // 特征点个数
 
@@ -77,16 +81,16 @@ cv::Mat SiftMatch::LMS(const cv::Mat &match1_xy, const cv::Mat &match2_xy, std::
     change = (cv::Mat_<float>(3, 3) << values(0), values(1), values(4),
               values(2), values(3), values(5),
               +0.0f, +0.0f, 1.0f);
-
+    /* extracts a submatrix from the change matrix. This submatrix starts from the top-left corner (0, 0) and
+       includes two rows (0 and 1) and two columns (0 and 1), forming a 2x2 matrix. */
     cv::Mat temp_1 = change(cv::Range(0, 2), cv::Range(0, 2)); // 尺度和旋转量
     cv::Mat temp_2 = change(cv::Range(0, 2), cv::Range(2, 3)); // 平移量
 
-    cv::Mat match2_xy_change = temp_1 * match2_xy_trans + repeat(temp_2, 1, N);
-    cv::Mat diff             = match2_xy_change - match1_xy_trans; // 求差
+    cv::Mat match2_xy_change = temp_1 * match2_xy_trans + repeat(temp_2, 1, N); // map match2 to match1
+    cv::Mat diff             = match2_xy_change - match1_xy_trans;              // 求差
     pow(diff, 2.f, diff);
     rmse = (float)sqrt(cv::sum(diff)(0) * 1.0) / N; // sum输出是各个通道的和, / N 初始实在括号里面
   }
-
   // 如果是透视变换
   else if (model == std::string("perspective"))
   {
@@ -152,7 +156,6 @@ cv::Mat SiftMatch::LMS(const cv::Mat &match1_xy, const cv::Mat &match2_xy, std::
 
     rmse = (float)sqrt(cv::sum(diff)(0) * 1.0) / N; // sum输出是各个通道的和，rmse为输入点的均方误差
   }
-
   // 如果是相似变换
   else if (model == std::string("similarity"))
   {
@@ -413,12 +416,12 @@ cv::Mat SiftMatch::improve_LMS(const cv::Mat &match1_xy, const cv::Mat &match2_x
 }
 
 /*********************该函数删除错误的匹配点对****************************/
-/*points_1表示参考图像上匹配的特征点位置
- points_2表示待配准图像上匹配的特征点位置
- model表示变换模型，“similarity”,"affine"，“perspective”
- threshold表示内点阈值
- inliers表示points_1和points_2中对应的点对是否是正确匹配，如果是，对应元素值为1，否则为0
- rmse表示最后所有正确匹配点对计算出来的误差
+/*points_1 表示参考图像上匹配的特征点位置
+ points_2 表示待配准图像上匹配的特征点位置
+ model 表示变换模型，“similarity”,"affine"，“perspective”
+ threshold 表示内点阈值
+ inliers 表示points_1和points_2中对应的点对是否是正确匹配，如果是，对应元素值为1，否则为0
+ rmse 表示最后所有正确匹配点对计算出来的误差
  返回一个3 x 3矩阵，表示待配准图像到参考图像的变换矩阵
  */
 cv::Mat SiftMatch::ransac(const std::vector<cv::Point2f> &points_1, const std::vector<cv::Point2f> &points_2, std::string model, float threshold, std::vector<bool> &inliers, float &rmse)
@@ -511,7 +514,7 @@ cv::Mat SiftMatch::ransac(const std::vector<cv::Point2f> &points_1, const std::v
     {
       randu(rand_mat, 0, N - 1); // 随机生成n个范围在[0,N-1]之间的数，作为获取特征点的索引
 
-      // 保证这n个点坐标不相同
+      // 对于不同的模型，分别判断这n个点坐标不相同
       if (n == 2 && p[0] != p[1] && (p10[p[0]] != p10[p[1]] || p11[p[0]] != p11[p[1]]) && (p20[p[0]] != p20[p[1]] || p21[p[0]] != p21[p[1]]))
       {
         break;
@@ -580,10 +583,11 @@ cv::Mat SiftMatch::ransac(const std::vector<cv::Point2f> &points_1, const std::v
           ++consensus_num;
         }
         else
+        {
           right[i] = false;
+        }
       }
     }
-
     else if (model == std::string("affine") || model == std::string("similarity"))
     {
       cv::Mat match2_xy_change = T * arr_2; // 计算在参考图像中的映射坐标
@@ -605,7 +609,9 @@ cv::Mat SiftMatch::ransac(const std::vector<cv::Point2f> &points_1, const std::v
           ++consensus_num;
         }
         else
+        {
           right[i] = false;
+        }
       }
     }
 
@@ -616,9 +622,11 @@ cv::Mat SiftMatch::ransac(const std::vector<cv::Point2f> &points_1, const std::v
 
       // 把正确匹配的点赋予标签 1
       for (size_t i = 0; i < N; ++i)
+      {
         inliers[i] = right[i];
+      }
     }
-  } // endfor:
+  } // endfor: have gotten best transformation by iteration
 
   // 删除重复点对
   for (size_t i = 0; i < N - 1; ++i)
@@ -660,9 +668,11 @@ cv::Mat SiftMatch::ransac(const std::vector<cv::Point2f> &points_1, const std::v
   int num_ransac = (model == std::string("similarity") ? 2 : (model == std::string("affine") ? 3 : 4));
 
   if (k < num_ransac)
+  {
     CV_Error(CV_StsBadArg, "ransac模块删除错误点对后剩下正确点对个数不足以计算出变换关系矩阵！");
+  }
 
-  // 利用迭代后正确匹配点计算变换矩阵，为什么不是挑选 n 个点计算变换矩阵
+  // 利用迭代后正确匹配点计算最终变换矩阵
   T = LMS(consensus_arr1, consensus_arr2, model, rmse);
 
   return T;
@@ -679,7 +689,9 @@ cv::Mat SiftMatch::ransac(const std::vector<cv::Point2f> &points_1, const std::v
 void SiftMatch::mosaic_map(const cv::Mat &image_1, const cv::Mat &image_2, cv::Mat &chessboard_1, cv::Mat &chessboard_2, cv::Mat &mosaic_image, int width)
 {
   if (image_1.size != image_2.size)
+  {
     CV_Error(CV_StsBadArg, "mosaic_map模块输入两幅图大小必须一致！");
+  }
 
   // 生成image_1的棋盘网格图
   chessboard_1 = image_1.clone();
@@ -815,21 +827,25 @@ inline void median_filter(cv::Mat &image, const std::vector<std::vector<int>> &p
 
 /***************该函数把配准后的图像进行融合*****************/
 /*该函数功能主要是来对图像进行融合，以显示配准的效果
- *image_1表示参考图像
- *image_2表示待配准图像
- *T表示待配准图像到参考图像的转换矩阵
- *fusion_image表示参考图像和待配准图像融合后的图像
- *mosaic_image表示参考图像和待配准图像融合镶嵌后的图像，镶嵌图形是为了观察匹配效果
- *matched_image表示把待配准图像进行配准后的结果
+ *image_1 表示参考图像
+ *image_2 表示待配准图像
+ *T 表示待配准图像到参考图像的转换矩阵
+ *fusion_image 表示参考图像和待配准图像融合后的图像
+ *mosaic_image 表示参考图像和待配准图像融合镶嵌后的图像，镶嵌图形是为了观察匹配效果
+ *matched_image 表示把待配准图像进行配准后的结果
  */
 void SiftMatch::image_fusion(const cv::Mat &image_1, const cv::Mat &image_2, const cv::Mat T, cv::Mat &fusion_image, cv::Mat &matched_image)
 {
   // 有关depth()的理解，详解：https://blog.csdn.net/datouniao1/article/details/113524784
 
   if (!(image_1.depth() == CV_8U && image_2.depth() == CV_8U))
+  {
     CV_Error(CV_StsBadArg, "image_fusion模块仅支持uchar类型图像！");
+  }
   if (image_1.channels() == 4 || image_2.channels() == 4)
+  {
     CV_Error(CV_StsBadArg, "image_fusion模块仅仅支持单通道或者3通道图像");
+  }
 
   int rows_1 = image_1.rows, cols_1 = image_1.cols;
   int rows_2 = image_2.rows, cols_2 = image_2.cols;
@@ -839,7 +855,6 @@ void SiftMatch::image_fusion(const cv::Mat &image_1, const cv::Mat &image_2, con
 
   // 可以对：彩色-彩色、彩色-灰色、灰色-彩色、灰色-灰色的配准
   cv::Mat image_1_temp, image_2_temp;
-
   if (channel_1 == 3 && channel_2 == 3)
   {
     image_1_temp = image_1;
@@ -1078,12 +1093,12 @@ void SiftMatch::image_fusion(const cv::Mat &image_1, const cv::Mat &image_2, con
 }
 
 /******该函数计算参考图像一个描述子和待配准图像所有描述子的欧式距离，并获得最近邻和次近邻距离，以及对应的索引*/
-/*sub_des_1表示参考图像的一个描述子
- *des_2表示待配准图像描述子
- *num_des_2值待配准图像描述子个数
- *dims_des指的是描述子维度
- *dis保存最近邻和次近邻距离
- *idx保存最近邻和次近邻索引
+/*sub_des_1 表示参考图像的一个描述子
+ *des_2 表示待配准图像描述子
+ *num_des_2 值待配准图像描述子个数
+ *dims_des 指的是描述子维度
+ *dis 保存最近邻和次近邻距离
+ *idx 保存最近邻和次近邻索引
  */
 inline void min_dis_idx(const float *ptr_1, const cv::Mat &des_2, int num_des2, int dims_des, float dis[2], int idx[2])
 {
@@ -1200,19 +1215,22 @@ void SiftMatch::scale_ROM_Histogram(const std::vector<cv::DMatch> &matches, floa
   float *X = buffer, *Y = buffer + len, *Mag = Y, *Ori = Y + len, *W = Ori + len;
   float *temp_hist = W + len + 2; // 临时保存直方图数据
 
+  // 数据清零
   for (int i = 0; i < n; ++i)
-    temp_hist[i] = 0.f; // 数据清零
+  {
+    temp_hist[i] = 0.f;
+  }
 }
 
 /*******************该函数删除错误匹配点对,并完成匹配************************/
-/*image_1表示参考图像，
-  image_2表示待配准图像
-  dmatchs表示最近邻和次近邻匹配点对
-  keys_1表示参考图像特征点集合
-  keys_2表示待配准图像特征点集合
-  model表示变换模型
-  right_matchs表示参考图像和待配准图像正确匹配点对
-  matched_line表示在参考图像和待配准图像上绘制连接线
+/*image_1 表示参考图像，
+  image_2 表示待配准图像
+  dmatchs 表示最近邻和次近邻匹配点对
+  keys_1 表示参考图像特征点集合
+  keys_2 表示待配准图像特征点集合
+  model 表示变换模型
+  right_matchs 表示参考图像和待配准图像正确匹配点对
+  matched_line 表示在参考图像和待配准图像上绘制连接线
   该函数返回变换模型参数
  */
 cv::Mat SiftMatch::match(const cv::Mat &image_1, const cv::Mat &image_2, const std::vector<std::vector<cv::DMatch>> &dmatchs, std::vector<cv::KeyPoint> keys_1,
@@ -1273,9 +1291,11 @@ cv::Mat SiftMatch::match(const cv::Mat &image_1, const cv::Mat &image_2, const s
 
   // 绘制初始匹配点对连线图,此时初始匹配指的是经过 KnnMatch 筛选后的匹配
   cv::Mat initial_matched; // 输出矩阵，类似画布
+  // 该函数用于绘制特征点并对匹配的特征点进行连线
   drawMatches(image_1, keys_1, image_2, keys_2, init_matchs, initial_matched,
-              cv::Scalar(255, 0, 255), cv::Scalar(0, 255, 0), std::vector<char>()); // 该函数用于绘制特征点并对匹配的特征点进行连线
-  imwrite("../image_save/初始匹配点对.jpg", initial_matched);                       // 保存图片,第一个颜色控制连线，第二个颜色控制特征点
+              cv::Scalar(255, 0, 255), cv::Scalar(0, 255, 0), std::vector<char>());
+  // 保存图片,第一个颜色控制连线，第二个颜色控制特征点
+  imwrite("../image_save/初始匹配点对.jpg", initial_matched);
 
   // 绘制正确匹配点对连线图
   drawMatches(image_1, keys_1, image_2, keys_2, right_matchs, matched_line,
