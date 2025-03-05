@@ -1,4 +1,7 @@
 build
+.cache
+.vscode
+
 image_save
 refer
 sift2

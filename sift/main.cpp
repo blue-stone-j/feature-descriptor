@@ -15,12 +15,12 @@
 int main(int argc, char *argv[])
 {
   /********************** 1、读入数据 **********************/
-  cv::Mat image_1 = cv::imread("../asserts/1.pgm", -1);
-  cv::Mat image_2 = cv::imread("../asserts/2.pgm", -1);
+  cv::Mat image_1 = cv::imread("../assets/1.pgm", -1);
+  cv::Mat image_2 = cv::imread("../assets/2.pgm", -1);
 
   std::string change_model = "perspective"; // affine为仿射变换，初始为perspective
 
-  std::string folderPath = "../asserts";
+  std::string folderPath = "../assets";
 
   double total_count_beg = (double)cv::getTickCount(); // 算法运行总时间开始计时
 
